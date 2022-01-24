@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 import os
-import argparse
 # from  yolotococo_ak import bboxYoloToCoco
 
 
@@ -19,65 +18,30 @@ def bboxYoloToCoco(ls,imgshape):
     return int(x1),int(y1),int(x1+x2),int(y1+y2)
 
 
-def start (ann_dir,img_dir,result_dir):
-	over=False
-	if not os.path.exists(result_dir):
-		os.mkdir(result_dir)
-	for file_name in os.listdir(ann_dir):
-		if not file_name in ['classes.txt']:
-			img_name=list(os.path.splitext(file_name))
-			img_name[-1]='jpg'
-			img_name='.'.join(img_name)
-			ann_name=os.path.join(ann_dir,file_name)
-			fimg_name=os.path.join(img_dir,img_name)
-			# img=cv2.imread(fimg_name)
-			anns=[i.strip() for i in open(ann_name,'r').readlines()]
-			an_w=open(ann_name,'r').readlines()
-			anns_bk=anns
-			ind=0
-			while ind<len(anns) and not over:
-				j=anns[ind]
-				img=cv2.imread(fimg_name)
-				x1,y1,x2,y2=bboxYoloToCoco(list(map(float,j.split()))[1:],img.shape[:-1])
-				cv2.rectangle(img,(x1,y1),(x2,y2),(0,255,0),5)
-				while ind<len(anns) and not over:
-					cv2.imshow(str(img_name),img)
-					keypress=cv2.waitKey(1)
-					if keypress==ord('d'):
-						ind+=1
-						break
-					elif keypress==ord('x'):
-						anns.pop(ind)
-						an_w.pop(ind)
-						ind+1
-						break
-					elif keypress==ord('a'):
-						ind-=1
-						if ind<0:
-							ind=0
-						break
-					elif keypress==ord('q'):
-						over=True
-						break
-					elif keypress==ord('r'):
-						anns=[i.strip() for i in open(ann_name,'r').readlines()]
-						an_w=open(ann_name,'r').readlines()
-						anns_bk=anns
-			cv2.destroyWindow(str(img_name))
-			rf=open(os.path.join(result_dir,file_name),'w')
-			rf.write(''.join(an_w))
-			rf.close()
-			if over :
-				break
-parser = argparse.ArgumentParser()
-parser.add_argument("-a", "--ann", type=str,
-                    default="ann/", dest="ann")
-parser.add_argument("-i", "--img", type=str, default="images", dest="images",
-                    help='Use ":amazon" for amazon filer')
-parser.add_argument("-r", "--result", type=str, default="results", dest="results")
 
-args = vars(parser.parse_args())
-ann_dir=args['ann']
-img_dir=args['images']
-result_dir=args['results']
-start(ann_dir,img_dir,result_dir)
+
+ann_dir="./ann"
+img_dir="./images"
+result_dir="./results"
+if not os.path.exists(result_dir):
+	os.mkdir(result_dir)
+for i in os.listdir(ann_dir):
+	if not i in ['classes.txt']:
+		img_name=list(os.path.splitext(i))
+		img_name[-1]='jpg'
+		img_name='.'.join(img_name)
+		ann_name=os.path.join(ann_dir,i)
+		fimg_name=os.path.join(img_dir,img_name)
+
+
+		img=cv2.imread(fimg_name)
+		print(fimg_name)
+		if img is None:
+			continue
+		# print(fimg_name)
+		for j in open(ann_name,"r"):
+			print(j.split())
+			x1,y1,x2,y2=bboxYoloToCoco(list(map(float,j.split()))[1:],img.shape[:-1])
+			cv2.rectangle(img,(x1,y1),(x2,y2),(0,255,0),5)
+		cv2.imwrite(os.path.join(result_dir,img_name),img)
+print('done')
